@@ -1,36 +1,37 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { eventBus, EVENTS } from '../../core/EventBus';
 import './Progress.css';
 
-export function Progress({timeTaken, timeAlreadyRun, uuid, autoStart}) {
+export function Progress({ lastRun, timeTaken }) {
   const [width, setWidth] = useState(0);
-  const intervalRef = useRef();
-  
+
   useEffect(() => {
-    setWidth(0);
-    if (!autoStart) {
-      return;
-    }
-    const startTime = (new Date()).getTime() - timeAlreadyRun;
-
-    intervalRef.current = setInterval(() => {
-      const currentTime = (new Date()).getTime();
-
-      const width = 100*(currentTime - startTime)/timeTaken;
-      setWidth(`${width}%`);
-      if (width >= 100) {
-        clearInterval(intervalRef.current);
+    const updateProgress = () => {
+      if (!lastRun) {
+        setWidth(0);
+        return;
       }
-    });
+      const now = Date.now();
+      const elapsed = now - lastRun;
+      const pct = Math.min(100, (elapsed / timeTaken) * 100);
+      setWidth(`${pct}%`);
+    };
 
-    return () => {
-      clearInterval(intervalRef.current);
+    updateProgress();
+
+    const unsubscribe = eventBus.on(EVENTS.TICK, updateProgress);
+    return unsubscribe;
+  }, [lastRun, timeTaken]);
+
+  useEffect(() => {
+    if (!lastRun) {
+      setWidth(0);
     }
-  // eslint-disable-next-line
-  }, [uuid, autoStart]);
+  }, [lastRun]);
 
   return (
     <div className="progress-bar">
-      <span style={{width}}></span>
+      <span style={{ width }}></span>
     </div>
   );
 }

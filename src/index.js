@@ -6,7 +6,6 @@ import * as serviceWorker from './serviceWorker';
 
 import { Provider } from "react-redux";
 import store from "./redux/store";
-import { saveCloseTime } from './localStorage';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -16,7 +15,5 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
-
-window.addEventListener('unload', saveCloseTime);
 
 serviceWorker.register();
