@@ -1,5 +1,11 @@
 import { round } from '../../utils/number';
-import { INCREASE_BALANCE, DECREASSE_BALANCE, COMMIT_PRODUCTION } from "../actionTypes";
+import {
+  INCREASE_BALANCE,
+  DECREASE_BALANCE,
+  BUY_BUSINESS,
+  HIRE_MANAGER,
+  COMMIT_PRODUCTION,
+} from "../actionTypes";
 
 
 const initialState = {
@@ -13,9 +19,23 @@ export default function balance(state = initialState, action) {
         amount: round(state.amount + action.payload.amount)
       };
     }
-    case DECREASSE_BALANCE: {
+    case DECREASE_BALANCE: {
       return {
         amount: round(state.amount - action.payload.amount)
+      };
+    }
+    // Buying a business deducts its price atomically alongside the businesses
+    // reducer growing the quantity — a single action keeps both slices in sync.
+    case BUY_BUSINESS: {
+      return {
+        amount: round(state.amount - action.payload.price)
+      };
+    }
+    // Hiring a manager deducts the manager's price atomically alongside the
+    // managers reducer flagging it as hired.
+    case HIRE_MANAGER: {
+      return {
+        amount: round(state.amount - action.payload.manager.price)
       };
     }
     // Production earnings (online loop, resume, and offline calc) are credited

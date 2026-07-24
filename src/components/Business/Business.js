@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CountDown } from '../CountDown';
 import { Progress } from '../Progress';
-import { buyBusiness, decreaseBalance, setLastRun } from '../../redux/actions';
+import { buyBusiness, setLastRun } from '../../redux/actions';
 import './Business.css';
 
 // A single business row. Production (cycle completion + payout) is handled
@@ -26,8 +26,9 @@ export function Business({ id, name, price, lastRun, timeTaken, hasManager, quan
 
   const buy = () => {
     if (balance.amount >= price) {
-      dispatch(buyBusiness(id, 1));
-      dispatch(decreaseBalance(price));
+      // Single atomic action: quantity up + balance down. No intermediate
+      // inconsistent state between two separate dispatches.
+      dispatch(buyBusiness(id, 1, price));
     }
   };
 

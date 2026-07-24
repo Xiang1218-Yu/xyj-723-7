@@ -1,6 +1,6 @@
 import {
   INCREASE_BALANCE,
-  DECREASSE_BALANCE,
+  DECREASE_BALANCE,
   BUY_BUSINESS,
   SET_LAST_RUN,
   HIRE_MANAGER,
@@ -19,18 +19,23 @@ export const increaseBalance = amount => ({
 });
 
 export const decreaseBalance = amount => ({
-  type: DECREASSE_BALANCE,
+  type: DECREASE_BALANCE,
   payload: {
     amount
   }
 });
 
-export const buyBusiness = (businessId, qty) => ({
+// Buying a business is a single atomic action: the businesses reducer grows
+// the quantity while the balance reducer deducts `price` from the same action,
+// so there is never an intermediate state where the business is bought but the
+// money hasn't been spent (or vice versa).
+export const buyBusiness = (businessId, qty, price) => ({
   type: BUY_BUSINESS,
   meta: { audit: true },
   payload: {
     businessId,
-    qty
+    qty,
+    price
   }
 });
 
@@ -41,6 +46,9 @@ export const setLastRun = (businessId) => ({
   }
 });
 
+// Hiring a manager is likewise atomic: the managers reducer flags the manager
+// as hired while the balance reducer deducts the manager's price from the same
+// action.
 export const hireManager = (manager) => ({
   type: HIRE_MANAGER,
   meta: { audit: true },
