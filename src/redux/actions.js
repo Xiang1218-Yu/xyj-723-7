@@ -39,10 +39,15 @@ export const buyBusiness = (businessId, qty, price) => ({
   }
 });
 
-export const setLastRun = (businessId) => ({
+// Stamp the start time in the action creator (not the reducer) so it uses the
+// same Date.now() clock source as the unified game loop / production logic,
+// keeping reducers pure and avoiding clock-source drift between the manual
+// start time and the loop that measures progress against it.
+export const setLastRun = (businessId, at = Date.now()) => ({
   type: SET_LAST_RUN,
   payload: {
-    businessId
+    businessId,
+    at
   }
 });
 

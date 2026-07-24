@@ -40,7 +40,7 @@ return {
   ...state,
   [business.id]: {
     ...business,
-    lastRun: (new Date()).getTime()
+    lastRun: action.payload.at
   }
 }
 // Case for hiring a manager for a business
