@@ -1,51 +1,80 @@
-import { processBackgroundCalculating } from './utils/game';
+import businessesData from './data/businesses';
 
-// Loads the saved state from the browser's local storage.
-// Returns undefined if the state is not found or there's an error.
+const STATE_KEY = 'AdventureCapitalist_State';
+const CLOSE_TIME_KEY = 'AdventureCapitalist_CloseTime';
+
 export const loadState = () => {
   try {
-    const serializedState = localStorage.getItem('AdventureCapitalist_State');
+    const serializedState = localStorage.getItem(STATE_KEY);
     if (serializedState === null) {
       return undefined;
     }
-    // Processes the saved state and returns it.
-    return processBackgroundCalculating(JSON.parse(serializedState));
+    const parsed = JSON.parse(serializedState);
+    return normalizeState(parsed);
   } catch (error) {
-    console.warn(error);
+    console.warn('[localStorage] loadState failed:', error);
     return undefined;
   }
-}
+};
 
-// Saves the given state to the browser's local storage.
+const normalizeState = (state) => {
+  if (!state) return state;
+
+  if (state.businesses) {
+    const merged = {};
+    Object.keys(businessesData).forEach((key) => {
+      const saved = state.businesses[key] || {};
+      merged[key] = {
+        ...businessesData[key],
+        ...saved,
+        running: saved.running ?? false,
+        lastRun: saved.lastRun ?? null,
+      };
+    });
+    state.businesses = merged;
+  }
+
+  return state;
+};
+
 export const saveState = (state) => {
   try {
-    localStorage.setItem('AdventureCapitalist_State', JSON.stringify(state));
+    const serializable = {
+      balance: state.balance,
+      businesses: state.businesses,
+      managers: state.managers,
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(serializable));
   } catch (error) {
-    console.warn(error);
+    console.warn('[localStorage] saveState failed:', error);
   }
-}
+};
 
-// Gets the saved close time from the browser's local storage.
-// Returns undefined if the time is not found or there's an error.
 export const getCloseTime = () => {
   try {
-    const time = localStorage.getItem('AdventureCapitalist_CloseTime');
+    const time = localStorage.getItem(CLOSE_TIME_KEY);
     if (time === null) {
       return undefined;
     }
-    // Converts the saved time to a number and returns it.
     return Number(time);
   } catch (error) {
-    console.warn(error);
+    console.warn('[localStorage] getCloseTime failed:', error);
     return undefined;
   }
-}
+};
 
-// Saves the current time to the browser's local storage.
 export const saveCloseTime = () => {
   try {
-    localStorage.setItem('AdventureCapitalist_CloseTime', (new Date().getTime()));
+    localStorage.setItem(CLOSE_TIME_KEY, String(Date.now()));
   } catch (error) {
-    console.warn(error);
+    console.warn('[localStorage] saveCloseTime failed:', error);
   }
-}
+};
+
+export const clearCloseTime = () => {
+  try {
+    localStorage.removeItem(CLOSE_TIME_KEY);
+  } catch (error) {
+    console.warn('[localStorage] clearCloseTime failed:', error);
+  }
+};

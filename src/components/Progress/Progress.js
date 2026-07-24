@@ -1,36 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
+import { useGameTick } from '../../hooks/useGameTick';
 import './Progress.css';
 
-export function Progress({timeTaken, timeAlreadyRun, uuid, autoStart}) {
-  const [width, setWidth] = useState(0);
-  const intervalRef = useRef();
-  
-  useEffect(() => {
-    setWidth(0);
-    if (!autoStart) {
-      return;
-    }
-    const startTime = (new Date()).getTime() - timeAlreadyRun;
+export function Progress({ timeTaken, lastRun, running }) {
+  useGameTick();
 
-    intervalRef.current = setInterval(() => {
-      const currentTime = (new Date()).getTime();
-
-      const width = 100*(currentTime - startTime)/timeTaken;
-      setWidth(`${width}%`);
-      if (width >= 100) {
-        clearInterval(intervalRef.current);
-      }
-    });
-
-    return () => {
-      clearInterval(intervalRef.current);
-    }
-  // eslint-disable-next-line
-  }, [uuid, autoStart]);
+  const width = calcWidth(timeTaken, lastRun, running);
 
   return (
     <div className="progress-bar">
-      <span style={{width}}></span>
+      <span style={{ width }}></span>
     </div>
   );
 }
+
+const calcWidth = (timeTaken, lastRun, running) => {
+  if (!running || !lastRun) {
+    return '0%';
+  }
+  const elapsed = Date.now() - lastRun;
+  const ratio = Math.min(1, elapsed / timeTaken);
+  return `${ratio * 100}%`;
+};
