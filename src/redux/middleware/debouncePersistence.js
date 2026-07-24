@@ -1,12 +1,14 @@
 import { saveState } from '../../localStorage';
 import eventBus, { GameEvents } from '../../core/EventBus';
+import gameLoop from '../../core/GameLoop';
 
 const DEBOUNCE_MS = 1500;
 const AUTOSAVE_INTERVAL = 5000;
 
 const debouncePersistence = (api) => {
   let debounceTimer = null;
-  let autosaveTimerRef = null;
+  let autosaveAccumulator = 0;
+  let unsubscribeLoop = null;
 
   const flushNow = () => {
     if (debounceTimer) {
@@ -30,12 +32,24 @@ const debouncePersistence = (api) => {
 
   const stop = () => {
     if (debounceTimer) clearTimeout(debounceTimer);
-    if (autosaveTimerRef) clearInterval(autosaveTimerRef);
+    if (unsubscribeLoop) {
+      unsubscribeLoop();
+      unsubscribeLoop = null;
+    }
   };
 
-  autosaveTimerRef = setInterval(flushNow, AUTOSAVE_INTERVAL);
+  unsubscribeLoop = gameLoop.subscribe((delta) => {
+    autosaveAccumulator += delta;
+    if (autosaveAccumulator >= AUTOSAVE_INTERVAL) {
+      autosaveAccumulator = 0;
+      flushNow();
+    }
+  });
 
-  eventBus.on(GameEvents.GAME_PAUSE, flushNow);
+  eventBus.on(GameEvents.GAME_PAUSE, () => {
+    autosaveAccumulator = 0;
+    flushNow();
+  });
 
   if (typeof window !== 'undefined') {
     window.__gameFlushSave = flushNow;

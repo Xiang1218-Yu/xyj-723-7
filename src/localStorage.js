@@ -34,10 +34,6 @@ const normalizeState = (state) => {
     state.businesses = merged;
   }
 
-  if (state.awayEarning) {
-    state.awayEarning = { amount: 0, awayDuration: '' };
-  }
-
   return state;
 };
 

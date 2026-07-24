@@ -81,6 +81,8 @@ export const hireManagerWithFunds = (manager) => (dispatch, getState) => {
 };
 
 export const calculateOfflineEarningsThunk = () => (dispatch, getState) => {
+  dispatch(clearAwayEarnings());
+
   const state = getState();
   const now = Date.now();
   const closeTime = getCloseTime();
