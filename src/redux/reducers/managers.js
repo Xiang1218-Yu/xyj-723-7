@@ -1,9 +1,9 @@
-import { HIRE_MANAGER } from "../actionTypes";
+import { HIRE_MANAGER } from '../actionTypes';
 import managers from '../../data/managers';
 
 const initialState = managers;
 
-export default function(state = initialState, action) {
+function managersReducer(state = initialState, action) {
   switch (action.type) {
     case HIRE_MANAGER: {
       const manager = action.payload.manager;
@@ -11,11 +11,13 @@ export default function(state = initialState, action) {
         ...state,
         [manager.id]: {
           ...manager,
-          hired: true
-        }
+          hired: true,
+        },
       };
     }
     default:
       return state;
   }
 }
+
+export default managersReducer;
