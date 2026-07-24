@@ -1,15 +1,15 @@
-import { processBackgroundCalculating } from './utils/game';
-
 // Loads the saved state from the browser's local storage.
 // Returns undefined if the state is not found or there's an error.
+// NOTE: offline (away) earnings are no longer computed here. They now run
+// through the calculateOfflineEarnings thunk as part of the standard Redux
+// data flow, so loadState just hydrates the raw persisted state.
 export const loadState = () => {
   try {
     const serializedState = localStorage.getItem('AdventureCapitalist_State');
     if (serializedState === null) {
       return undefined;
     }
-    // Processes the saved state and returns it.
-    return processBackgroundCalculating(JSON.parse(serializedState));
+    return JSON.parse(serializedState);
   } catch (error) {
     console.warn(error);
     return undefined;

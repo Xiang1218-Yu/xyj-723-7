@@ -1,32 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
+import { useGameClock } from '../../hooks/useGameClock';
 
-// Time in milisecond
-export function CountDown({timeTaken, timeAlreadyRun, onComplete = () => {}, autoStart, uuid}) {
-  const [timeLeft, setTimeLeft] = useState(timeTaken - timeAlreadyRun);
-  const intervalRef = useRef();
-  useEffect(() => {
-    setTimeLeft(timeTaken - timeAlreadyRun);
-    if (!autoStart) {
-      return;
-    }
-    const startTime = (new Date()).getTime();
-    const endTime = startTime + timeTaken - Number(timeAlreadyRun);
+// Presentational countdown. Time remaining is derived every frame from the
+// shared game clock and the business's `lastRun` timestamp — no local timer.
+// When idle (no lastRun) it shows the full cycle duration.
+export function CountDown({ timeTaken, lastRun }) {
+  const now = useGameClock();
 
-    intervalRef.current = setInterval(() => {
-      const currentTime = (new Date()).getTime();
-      if (endTime > currentTime) {
-        setTimeLeft(endTime - currentTime);
-      } else {
-        clearInterval(intervalRef.current);
-        onComplete();
-      }
-    }, 10);
-
-    return () => {
-      clearInterval(intervalRef.current);
-    }
-  // eslint-disable-next-line
-  }, [uuid, autoStart]);
+  let timeLeft = timeTaken;
+  if (lastRun) {
+    timeLeft = Math.max(0, timeTaken - (now - lastRun));
+  }
 
   return (
     <div className="count-down-timer">
