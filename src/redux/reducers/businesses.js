@@ -1,5 +1,5 @@
 // Reducer function for managing the state of businesses
-import { BUY_BUSINESS, HIRE_MANAGER, SET_LAST_RUN } from "../actionTypes";
+import { BUY_BUSINESS, HIRE_MANAGER, SET_LAST_RUN, COMMIT_PRODUCTION } from "../actionTypes";
 import businesses from '../../data/businesses';
 import { round } from '../../utils/number';
 
@@ -10,8 +10,12 @@ const initialState = businesses;
 const PROFIT_FROM_PRICE = 0.3;
 const PRICE_GAIN = 1.1;
 
-export default function(state = initialState, action) {
+export default function businessesReducer(state = initialState, action) {
 switch (action.type) {
+// The unified game loop / offline calc supplies a freshly computed
+// businesses map (advanced lastRun timestamps). Adopt it wholesale.
+case COMMIT_PRODUCTION:
+return action.payload.businesses;
 // Case for buying a business
 case BUY_BUSINESS: {
 const businessId = action.payload.businessId;
@@ -36,7 +40,7 @@ return {
   ...state,
   [business.id]: {
     ...business,
-    lastRun: (new Date()).getTime()
+    lastRun: action.payload.at
   }
 }
 // Case for hiring a manager for a business

@@ -1,61 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CountDown } from '../CountDown';
 import { Progress } from '../Progress';
-import { v4 as uuidv4 } from 'uuid';
-import { increaseBalance, decreaseBalance, buyBusiness, setLastRun } from '../../redux/actions';
+import { buyBusiness, setLastRun } from '../../redux/actions';
 import './Business.css';
 
-export function Business({id, name, price, lastRun, timeTaken, hasManager, quantityPurchased, icon, profit}) {
-  const [uuid, setUuid] = useState(uuidv4());
-  const [running, setRunning] = useState(hasManager);
-  const [timeAlreadyRun, setTimeAlreadyRun] = useState(0);
+// A single business row. Production (cycle completion + payout) is handled
+// centrally by the BusinessSystem game loop, so this component no longer owns
+// timers, uuids or an onComplete callback — it just reads `lastRun` from the
+// store and renders. Clicking an idle, unmanaged business starts a cycle by
+// stamping its lastRun; the loop credits the profit when the cycle finishes.
+export function Business({ id, name, price, lastRun, timeTaken, hasManager, quantityPurchased, icon, profit }) {
   const dispatch = useDispatch();
   const balance = useSelector(state => state.balance);
 
+  const isRunning = !!lastRun;
+
   const runBusinessManually = (e) => {
     e.preventDefault();
-    if (!running) {
-      setUuid(uuidv4());
-      setRunning(true);
+    // Only manual (unmanaged) businesses need a click, and only when idle.
+    if (!hasManager && !isRunning) {
       dispatch(setLastRun(id));
     }
-  }
-
-  const onComplete = () => {
-    setTimeAlreadyRun(0);
-    setRunning(hasManager);
-    dispatch(increaseBalance(profit));
-    if (hasManager) {
-      setUuid(uuidv4());
-      dispatch(setLastRun(id));
-    }
-  }
+  };
 
   const buy = () => {
     if (balance.amount >= price) {
-      dispatch(buyBusiness(id, 1));
-      dispatch(decreaseBalance(price));
+      // Single atomic action: quantity up + balance down. No intermediate
+      // inconsistent state between two separate dispatches.
+      dispatch(buyBusiness(id, 1, price));
     }
-  }
-
-  useEffect(() => {
-    if (hasManager) {
-      setUuid(uuidv4());
-      setRunning(true);
-      dispatch(setLastRun(id));
-    }
-  // eslint-disable-next-line
-  }, [hasManager]);
-
-  useEffect(() => {
-    const now = (new Date()).getTime();
-    if (lastRun && now - lastRun < timeTaken) {
-      setTimeAlreadyRun(now - lastRun);
-      setRunning(true);
-    }
-  // eslint-disable-next-line
-  }, []);
+  };
 
   return (
     <div className="business">
@@ -67,7 +42,7 @@ export function Business({id, name, price, lastRun, timeTaken, hasManager, quant
         </div>
         <div className="business-content">
           <div className="business-progress" onClick={runBusinessManually}>
-            <Progress timeTaken={timeTaken} timeAlreadyRun={timeAlreadyRun} uuid={uuid} autoStart={running}/>
+            <Progress timeTaken={timeTaken} lastRun={lastRun}/>
             <span className="business-profit">${profit.toLocaleString()}</span>
           </div>
           <div className="business-buy-and-timer">
@@ -76,7 +51,7 @@ export function Business({id, name, price, lastRun, timeTaken, hasManager, quant
               <span>Buy</span><span>${price.toLocaleString()}</span>
             </div>
             <div className="business-timer">
-              <CountDown timeTaken={timeTaken} timeAlreadyRun={timeAlreadyRun} autoStart={running} uuid={uuid} onComplete={onComplete}/>
+              <CountDown timeTaken={timeTaken} lastRun={lastRun}/>
             </div>
           </div>
         </div>

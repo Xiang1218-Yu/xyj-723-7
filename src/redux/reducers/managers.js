@@ -3,7 +3,7 @@ import managers from '../../data/managers';
 
 const initialState = managers;
 
-export default function(state = initialState, action) {
+export default function managersReducer(state = initialState, action) {
   switch (action.type) {
     case HIRE_MANAGER: {
       const manager = action.payload.manager;
